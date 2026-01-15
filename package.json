@@ -1,0 +1,12 @@
+{
+    "name": "nedir-me-local",
+    "version": "1.0.0",
+    "description": "Nedir.me local development site",
+    "scripts": {
+        "start": "wp-now start --path=wp-content",
+        "wp-now": "wp-now"
+    },
+    "devDependencies": {
+        "@wp-now/wp-now": "latest"
+    }
+}

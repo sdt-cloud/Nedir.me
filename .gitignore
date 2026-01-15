@@ -1,0 +1,23 @@
+# Dependencies
+node_modules/
+
+# WP-Now generated files
+wp-content/database/
+wp-content/db.php/
+wp-content/uploads/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Temp files
+*.tmp
+*.temp
