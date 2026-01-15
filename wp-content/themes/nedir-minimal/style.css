@@ -216,16 +216,21 @@ p {
     display: flex;
     align-items: center;
     gap: var(--space-sm);
+    text-decoration: none;
 }
 
 .site-branding a:hover {
-    color: var(--accent);
+    color: var(--text-primary);
 }
 
-.site-logo {
-    height: 45px;
-    width: auto;
-    object-fit: contain;
+.site-title {
+    font-size: 1.6rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+}
+
+.site-title-accent {
+    color: var(--accent);
 }
 
 /* Main Navigation */

@@ -4,6 +4,8 @@
     <meta charset="<?php bloginfo('charset'); ?>">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="<?php bloginfo('description'); ?>">
+    <link rel="icon" type="image/jpeg" href="<?php echo get_template_directory_uri(); ?>/images/favicon.jpg">
+    <link rel="apple-touch-icon" href="<?php echo get_template_directory_uri(); ?>/images/favicon.jpg">
     <?php wp_head(); ?>
 </head>
 <body <?php body_class(); ?>>
@@ -13,8 +15,8 @@
     <div class="container">
         <div class="header-inner">
             <div class="site-branding">
-                <a href="<?php echo esc_url(home_url('/')); ?>" rel="home" class="logo-link">
-                    <img src="<?php echo get_template_directory_uri(); ?>/images/logo.jpg" alt="Nedir.me" class="site-logo">
+                <a href="<?php echo esc_url(home_url('/')); ?>" rel="home">
+                    <span class="site-title">Nedir<span class="site-title-accent">.me</span></span>
                 </a>
             </div>
 
