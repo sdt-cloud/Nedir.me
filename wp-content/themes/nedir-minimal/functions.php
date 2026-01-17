@@ -12,13 +12,14 @@ if (!defined('ABSPATH')) {
 
 // Gemini API Key (https://makersuite.google.com/app/apikey)
 if (!defined('GEMINI_API_KEY')) {
-    define('GEMINI_API_KEY', 'AIzaSyBHnPFbyiT6bRhPfi4pe3nGAKsJN-P5kH0');
+    define('GEMINI_API_KEY', 'AIzaSyBjRi3WQhJTwf7qfke4LimM0plVl47jQBU');
 }
 
 // ChatGPT Integration
 require_once get_template_directory() . '/inc/chatgpt-integration.php';
 
-
+// Reset Descriptions Tool
+require_once get_template_directory() . '/inc/reset-descriptions.php';
 /**
  * Theme Setup
  */

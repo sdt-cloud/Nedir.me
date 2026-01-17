@@ -1,99 +1,195 @@
 <?php
 /**
- * Search Results Template
+ * Search Results Template - nedir.me style
+ * Shows exact match prominently, related concepts below
  */
 get_header();
+
+$search_query = get_search_query();
+
+// Find exact match first
+$exact_match = get_posts(array(
+    'post_type' => array('kavram', 'kisi', 'video'),
+    'title' => $search_query,
+    'posts_per_page' => 1,
+    'post_status' => 'publish',
+));
+
+// If no exact match, try with similar title
+if (empty($exact_match)) {
+    $exact_match = get_posts(array(
+        'post_type' => array('kavram', 'kisi', 'video'),
+        's' => $search_query,
+        'posts_per_page' => 1,
+        'post_status' => 'publish',
+    ));
+}
+
+// Get related concepts from same category
+$related = array();
+if (!empty($exact_match)) {
+    $main_post = $exact_match[0];
+    $terms = get_the_terms($main_post->ID, 'ana-kategori');
+    
+    if ($terms && !is_wp_error($terms)) {
+        $term_ids = wp_list_pluck($terms, 'term_id');
+        
+        $related = get_posts(array(
+            'post_type' => 'kavram',
+            'posts_per_page' => 8,
+            'post_status' => 'publish',
+            'post__not_in' => array($main_post->ID),
+            'tax_query' => array(
+                array(
+                    'taxonomy' => 'ana-kategori',
+                    'field' => 'term_id',
+                    'terms' => $term_ids,
+                ),
+            ),
+            'orderby' => 'rand',
+        ));
+    }
+}
 ?>
 
-<header class="search-header">
-    <div class="container">
-        <h1>
-            🔍 "<span class="search-query"><?php echo get_search_query(); ?></span>" için sonuçlar
-        </h1>
-        <p style="color: var(--text-muted); margin-top: var(--space-sm);">
-            <?php
-            global $wp_query;
-            printf(__('%d sonuç bulundu', 'nedir-minimal'), $wp_query->found_posts);
-            ?>
-        </p>
-    </div>
-</header>
-
-<section class="search-results">
+<section class="search-results" style="padding: var(--space-3xl) 0; min-height: 60vh;">
     <div class="container container-md">
         
-        <?php if (have_posts()) : ?>
+        <?php if (!empty($exact_match)) : 
+            $main_post = $exact_match[0];
+            $short_def = get_post_meta($main_post->ID, '_kavram_short_def', true);
+            $content = $main_post->post_content;
+            $terms = get_the_terms($main_post->ID, 'ana-kategori');
+            $category_name = $terms ? $terms[0]->name : '';
+        ?>
         
-            <?php while (have_posts()) : the_post(); ?>
-            <article class="search-result-item">
-                <?php
-                $post_type = get_post_type();
-                $type_labels = array(
-                    'kavram' => '📚 Kavram',
-                    'kisi'   => '👤 Kişi',
-                    'video'  => '🎬 Video',
-                    'post'   => '📝 Yazı',
-                    'page'   => '📄 Sayfa',
-                );
-                $type_label = isset($type_labels[$post_type]) ? $type_labels[$post_type] : '📄 İçerik';
-                ?>
-                <span style="font-size: 0.8rem; color: var(--accent); margin-bottom: var(--space-xs); display: block;">
-                    <?php echo $type_label; ?>
-                </span>
-                
-                <h3><a href="<?php the_permalink(); ?>"><?php the_title(); ?></a></h3>
-                
-                <p class="search-result-excerpt">
-                    <?php
-                    if ($post_type === 'kavram') {
-                        $short_def = get_post_meta(get_the_ID(), '_kavram_short_def', true);
-                        echo $short_def ? esc_html($short_def) : get_the_excerpt();
-                    } elseif ($post_type === 'kisi') {
-                        $tagline = get_post_meta(get_the_ID(), '_kisi_tagline', true);
-                        echo $tagline ? esc_html($tagline) : get_the_excerpt();
-                    } else {
-                        echo get_the_excerpt();
-                    }
-                    ?>
-                </p>
-                
-                <span class="search-result-url"><?php echo esc_url(get_permalink()); ?></span>
-            </article>
-            <?php endwhile; ?>
+        <!-- Main Result -->
+        <article class="main-search-result" style="
+            background: var(--bg-secondary);
+            border-radius: var(--radius-lg);
+            padding: var(--space-2xl);
+            margin-bottom: var(--space-2xl);
+            border-left: 4px solid var(--accent);
+        ">
+            <?php if ($category_name) : ?>
+            <span style="
+                display: inline-block;
+                padding: 4px 12px;
+                background: var(--accent-light);
+                color: var(--accent);
+                border-radius: var(--radius-full);
+                font-size: 0.8rem;
+                margin-bottom: var(--space-md);
+            "><?php echo esc_html($category_name); ?></span>
+            <?php endif; ?>
             
-            <nav class="pagination" style="margin-top: var(--space-2xl); text-align: center;">
-                <?php
-                echo paginate_links(array(
-                    'prev_text' => '← Önceki',
-                    'next_text' => 'Sonraki →',
-                ));
+            <h1 style="font-size: 2rem; margin-bottom: var(--space-md);">
+                <a href="<?php echo get_permalink($main_post->ID); ?>" style="color: var(--text-primary);">
+                    <?php echo esc_html($main_post->post_title); ?>
+                </a>
+            </h1>
+            
+            <?php if ($short_def && strpos($short_def, 'Açıklama eklenecek') === false) : ?>
+            <p style="font-size: 1.1rem; color: var(--text-secondary); line-height: 1.7; margin-bottom: var(--space-lg);">
+                <?php echo esc_html($short_def); ?>
+            </p>
+            <?php endif; ?>
+            
+            <a href="<?php echo get_permalink($main_post->ID); ?>" class="btn btn-primary" style="
+                display: inline-block;
+                padding: var(--space-sm) var(--space-lg);
+                background: var(--accent);
+                color: white;
+                border-radius: var(--radius-md);
+                text-decoration: none;
+                font-weight: 600;
+            ">
+                Detaylı Oku →
+            </a>
+        </article>
+        
+        <!-- Related Concepts -->
+        <?php if (!empty($related)) : ?>
+        <div class="related-concepts" style="margin-top: var(--space-2xl);">
+            <h3 style="color: var(--text-muted); font-size: 0.9rem; text-transform: uppercase; margin-bottom: var(--space-lg);">
+                İlgili Kavramlar
+            </h3>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: var(--space-md);">
+                <?php foreach ($related as $item) : 
+                    $item_def = get_post_meta($item->ID, '_kavram_short_def', true);
                 ?>
-            </nav>
+                <a href="<?php echo get_permalink($item->ID); ?>" style="
+                    display: block;
+                    background: var(--bg-tertiary);
+                    padding: var(--space-md);
+                    border-radius: var(--radius-md);
+                    text-decoration: none;
+                    transition: all var(--transition-fast);
+                    border: 1px solid var(--border);
+                " onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+                    <strong style="color: var(--text-primary); display: block; margin-bottom: 4px;">
+                        <?php echo esc_html($item->post_title); ?>
+                    </strong>
+                    <span style="font-size: 0.8rem; color: var(--text-muted);">
+                        <?php 
+                        if ($item_def && strpos($item_def, 'Açıklama eklenecek') === false) {
+                            echo esc_html(wp_trim_words($item_def, 8, '...'));
+                        } else {
+                            echo 'Açıklama için tıkla';
+                        }
+                        ?>
+                    </span>
+                </a>
+                <?php endforeach; ?>
+            </div>
+        </div>
+        <?php endif; ?>
         
         <?php else : ?>
         
+        <!-- No Results -->
         <div class="no-results text-center" style="padding: var(--space-3xl) 0;">
-            <h2>😕 Sonuç bulunamadı</h2>
-            <p style="color: var(--text-muted); margin-bottom: var(--space-xl);">
-                "<strong><?php echo get_search_query(); ?></strong>" için bir sonuç bulamadık. Başka bir kelime deneyin.
+            <h2 style="font-size: 2rem;">😕 "<?php echo esc_html($search_query); ?>" bulunamadı</h2>
+            <p style="color: var(--text-muted); margin: var(--space-lg) 0;">
+                Bu kavram henüz sitemizde yok. Başka bir kelime deneyin.
             </p>
             
-            <form role="search" method="get" action="<?php echo esc_url(home_url('/')); ?>">
-                <input type="search" 
-                       placeholder="<?php esc_attr_e('Tekrar ara...', 'nedir-minimal'); ?>" 
-                       value="<?php echo get_search_query(); ?>" 
-                       name="s"
-                       style="padding: var(--space-md) var(--space-lg); border: 2px solid var(--border); border-radius: var(--radius-full); font-size: 1rem; width: 300px;">
-                <button type="submit" class="btn btn-primary" style="margin-left: var(--space-sm);">Ara</button>
+            <form role="search" method="get" action="<?php echo esc_url(home_url('/')); ?>" style="margin-top: var(--space-xl);">
+                <div style="display: flex; justify-content: center; gap: var(--space-sm);">
+                    <input type="search" 
+                           placeholder="Tekrar ara..." 
+                           value="<?php echo esc_attr($search_query); ?>" 
+                           name="s"
+                           style="
+                               padding: var(--space-md) var(--space-lg);
+                               border: 2px solid var(--border);
+                               border-radius: var(--radius-full);
+                               font-size: 1rem;
+                               width: 300px;
+                               background: var(--bg-secondary);
+                               color: var(--text-primary);
+                           ">
+                    <button type="submit" style="
+                        padding: var(--space-md) var(--space-lg);
+                        background: var(--accent);
+                        color: white;
+                        border: none;
+                        border-radius: var(--radius-full);
+                        font-weight: 600;
+                        cursor: pointer;
+                    ">Ara</button>
+                </div>
             </form>
             
             <div style="margin-top: var(--space-2xl);">
-                <h3>Popüler Aramalar</h3>
-                <div class="trending-topics" style="justify-content: center; margin-top: var(--space-md);">
-                    <a href="<?php echo esc_url(home_url('/?s=kuantum')); ?>" class="trending-tag">Kuantum</a>
-                    <a href="<?php echo esc_url(home_url('/?s=felsefe')); ?>" class="trending-tag">Felsefe</a>
+                <h3 style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: var(--space-md);">POPÜLER ARAMALAR</h3>
+                <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: var(--space-sm);">
+                    <a href="<?php echo esc_url(home_url('/?s=stres')); ?>" class="trending-tag">Stres</a>
                     <a href="<?php echo esc_url(home_url('/?s=yapay+zeka')); ?>" class="trending-tag">Yapay Zeka</a>
-                    <a href="<?php echo esc_url(home_url('/?s=tarih')); ?>" class="trending-tag">Tarih</a>
+                    <a href="<?php echo esc_url(home_url('/?s=enflasyon')); ?>" class="trending-tag">Enflasyon</a>
+                    <a href="<?php echo esc_url(home_url('/?s=depresyon')); ?>" class="trending-tag">Depresyon</a>
+                    <a href="<?php echo esc_url(home_url('/?s=algoritma')); ?>" class="trending-tag">Algoritma</a>
                 </div>
             </div>
         </div>

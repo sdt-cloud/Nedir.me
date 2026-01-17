@@ -166,26 +166,42 @@ function nedir_process_batch_gemini() {
 }
 
 function nedir_call_gemini($title, $category, $api_key) {
-    $prompt = "Sen Nedir.me için içerik yazarısın. \"{$title}\" kavramı için Türkçe açıklama yaz.
+    $prompt = "Sen nedir.me için içerik yazarısın. \"{$title}\" kavramı için Türkçe açıklama yaz.
 
 Kategori: {$category}
 
-Format:
-1. KISA TANIM (1 cümle, max 20 kelime)
-2. AÇIKLAMA (2-3 paragraf, sade ve anlaşılır dil, HTML <p> tagları ile)
-3. GÜNLÜK HAYAT ÖRNEĞİ (1 paragraf)
+NEDİR.ME İÇERİK FORMATI:
 
-Kurallar:
-- Sade, anlaşılır Türkçe kullan
-- Herkesin anlayabileceği şekilde yaz
-- Teknik terimleri açıkla
-- Emoji kullanma
+1️⃣ KISA TANIM (EN KRİTİK - 2 cümleyi geçmez)
+- X, ……… demektir.
+- Günlük hayatta … için kullanılır.
 
-Cevabını SADECE JSON formatında ver, başka hiçbir şey yazma:
+2️⃣ GERÇEK HAYAT KARŞILIĞI (Akademik değil, sade)
+- \"Şöyle düşün:\" veya \"Şuna benzer:\" ile başla
+- Herkesin anlayacağı bir benzetme yap
+
+3️⃣ NE DEĞİLDİR?
+- X şunlarla karıştırılır ama...
+- X, Y değildir. Çünkü...
+
+4️⃣ NEREDE KULLANILIR? (Madde madde)
+- Günlük yaşam, İnternet, Eğitim, Teknoloji, Hukuk, Sosyal medya vb.
+
+5️⃣ 1 CÜMLELİK ÖZET (Slogan gibi)
+- \"X = …\" formatında
+
+KURALLAR:
+- Uzun paragraf yok
+- Akademik dil yok
+- Emoji yok
+- Yorum ve kaynak ismi yok
+- Okuma süresi 20-40 saniye
+
+Cevabını SADECE JSON formatında ver:
 {
-  \"short_def\": \"Kısa tanım buraya\",
-  \"content\": \"<p>Ana açıklama paragraf 1</p><p>Paragraf 2</p>\",
-  \"example\": \"Günlük hayat örneği buraya\"
+  \"short_def\": \"2 cümlelik kısa tanım\",
+  \"content\": \"<h2>Gerçek Hayat Karşılığı</h2><p>...</p><h2>Ne Değildir?</h2><p>...</p><h2>Nerede Kullanılır?</h2><ul><li>...</li></ul>\",
+  \"example\": \"1 cümlelik özet (slogan)\"
 }";
 
     $data = array(
