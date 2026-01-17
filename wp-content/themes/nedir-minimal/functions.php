@@ -473,3 +473,98 @@ function nedir_excerpt_more($more) {
     return '...';
 }
 add_filter('excerpt_more', 'nedir_excerpt_more');
+
+/**
+ * Auto Import Kavramlar - runs once on admin init
+ */
+add_action('admin_init', 'nedir_auto_import_kavramlar', 999);
+function nedir_auto_import_kavramlar() {
+    // Only run once
+    if (get_option('nedir_kavramlar_v5_imported')) {
+        return;
+    }
+    
+    if (!current_user_can('manage_options')) {
+        return;
+    }
+    
+    // Mark as done first
+    update_option('nedir_kavramlar_v5_imported', true);
+    
+    // Create categories
+    $categories = array(
+        'insan-zihin' => 'İnsan & Zihin',
+        'dijital-teknoloji' => 'Dijital & Teknoloji', 
+        'ekonomi' => 'Ekonomi & Finans',
+        'hukuk' => 'Hukuk',
+        'saglik' => 'Sağlık & Beden',
+        'egitim' => 'Eğitim',
+        'sosyal' => 'Sosyal & Günlük',
+        'genel' => 'Genel Kavramlar',
+    );
+    
+    foreach ($categories as $slug => $name) {
+        if (!term_exists($slug, 'ana-kategori')) {
+            wp_insert_term($name, 'ana-kategori', array('slug' => $slug));
+        }
+    }
+    
+    // Load all kavramlar from data files
+    require_once get_template_directory() . '/inc/kavramlar-data.php';
+    require_once get_template_directory() . '/inc/kavramlar-data-part2.php';
+    require_once get_template_directory() . '/inc/kavramlar-data-part3.php';
+    
+    $kavramlar = array_merge(
+        nedir_get_all_kavramlar(),
+        nedir_get_kavramlar_part2(),
+        nedir_get_kavramlar_part3()
+    );
+    
+    $count = 0;
+    foreach ($kavramlar as $item) {
+        $title = $item[0];
+        $cat_slug = $item[1];
+        
+        // Check if exists
+        $existing = get_posts(array(
+            'post_type' => 'kavram',
+            'title' => $title,
+            'posts_per_page' => 1,
+            'post_status' => 'any',
+        ));
+        
+        if (!empty($existing)) {
+            continue;
+        }
+        
+        $post_id = wp_insert_post(array(
+            'post_title' => $title,
+            'post_type' => 'kavram',
+            'post_status' => 'publish',
+            'post_content' => '',
+        ));
+        
+        if ($post_id && !is_wp_error($post_id)) {
+            $term = get_term_by('slug', $cat_slug, 'ana-kategori');
+            if ($term) {
+                wp_set_post_terms($post_id, array($term->term_id), 'ana-kategori');
+            }
+            update_post_meta($post_id, '_kavram_short_def', $title . ' nedir? (Açıklama eklenecek)');
+            $count++;
+        }
+    }
+    
+    // Store count for notice
+    set_transient('nedir_import_count', $count, 60);
+}
+
+// Show success notice
+add_action('admin_notices', 'nedir_import_success_notice');
+function nedir_import_success_notice() {
+    $count = get_transient('nedir_import_count');
+    if ($count) {
+        delete_transient('nedir_import_count');
+        echo '<div class="notice notice-success is-dismissible"><p><strong>✅ Nedir.me:</strong> ' . $count . ' kavram başarıyla eklendi!</p></div>';
+    }
+}
+
