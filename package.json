@@ -8,5 +8,8 @@
     },
     "devDependencies": {
         "@wp-now/wp-now": "latest"
+    },
+    "dependencies": {
+        "dotenv": "^17.2.3"
     }
 }

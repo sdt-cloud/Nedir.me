@@ -1,6 +1,9 @@
 # Dependencies
 node_modules/
 
+# Environment variables (API keys)
+.env
+
 # WP-Now generated files
 wp-content/database/
 wp-content/db.php/

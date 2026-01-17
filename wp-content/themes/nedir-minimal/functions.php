@@ -10,6 +10,15 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+// Gemini API Key (https://makersuite.google.com/app/apikey)
+if (!defined('GEMINI_API_KEY')) {
+    define('GEMINI_API_KEY', 'AIzaSyBHnPFbyiT6bRhPfi4pe3nGAKsJN-P5kH0');
+}
+
+// ChatGPT Integration
+require_once get_template_directory() . '/inc/chatgpt-integration.php';
+
+
 /**
  * Theme Setup
  */
